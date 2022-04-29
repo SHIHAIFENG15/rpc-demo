@@ -35,6 +35,7 @@ public class RpcServer {
                     try {
                         ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
                         int id = inputStream.readInt();
+                        log.info("客户端查询了"+id+"的用户");
                         User user = userService.getUserByUserId(id);
 
                         ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());

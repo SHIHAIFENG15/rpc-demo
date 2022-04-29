@@ -15,7 +15,6 @@ import java.util.UUID;
 @Slf4j
 public class UserServiceImpl implements UserService{
     public User getUserByUserId(Integer id) {
-        log.info("客户端查询了"+id+"的用户");
         // 模拟从数据库中取用户的行为
         Random random = new Random();
         User user = User.builder()
