@@ -3,6 +3,10 @@ package com.demo.server;
 import com.demo.common.entity.User;
 import com.demo.common.service.UserService;
 import com.demo.common.service.UserServiceImpl;
+import com.demo.common.utils.ReflectionUtils;
+import com.demo.proto.Request;
+import com.demo.proto.Response;
+import com.demo.proto.ServiceDescriptor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -20,7 +24,8 @@ import java.net.Socket;
 @Slf4j
 public class RpcServer {
     public static void main(String[] args) {
-        UserService userService = new UserServiceImpl();
+        ServiceManager sm = new ServiceManager();
+        sm.register(UserService.class, new UserServiceImpl());
 
         ServerSocket serverSocket = null;
 
@@ -32,16 +37,21 @@ public class RpcServer {
                 Socket socket = serverSocket.accept();
 
                 new Thread(() -> {
+                    Response resp = new Response();
                     try {
+                        // 先读取request
                         ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                        int id = inputStream.readInt();
-                        log.info("客户端查询了"+id+"的用户");
-                        User user = userService.getUserByUserId(id);
+                        Request request = (Request) inputStream.readObject();
+
+                        // 查找服务，代理，提取对象，包装成Response写回
+                        ServiceInstance instance = sm.lookup(request);
+                        Object o = ReflectionUtils.invoke(instance.getTarget(), instance.getMethod(), request.getParameters());
+                        resp = Response.success(o);
 
                         ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-                        outputStream.writeObject(user);
+                        outputStream.writeObject(resp);
                         outputStream.flush();
-                    } catch (IOException e) {
+                    } catch (IOException | ClassNotFoundException e) {
                         log.error(e.getMessage() + e);
                     }
                 }).start();

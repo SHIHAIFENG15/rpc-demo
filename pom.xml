@@ -12,6 +12,7 @@
         <module>rpc-demo-client</module>
         <module>rpc-demo-common</module>
         <module>rpc-demo-server</module>
+        <module>rpc-demo-proto</module>
     </modules>
 
     <properties>
