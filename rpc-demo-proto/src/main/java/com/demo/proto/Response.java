@@ -32,10 +32,10 @@ public class Response implements Serializable {
                 .build();
     }
 
-    public static Response fail() {
+    public static Response fail(String message) {
         return Response.builder()
                 .code(500)
-                .message("服务器错误")
+                .message(message)
                 .build();
     }
 }

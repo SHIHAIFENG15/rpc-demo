@@ -14,19 +14,20 @@ import java.util.UUID;
 
 @Slf4j
 public class UserServiceImpl implements UserService{
-    // 模拟从数据库中取用户的行为
+    // 模拟从数据库中取用户的行为,打日志观察动作
     public User getUserByUserId(Integer id) {
         Random random = new Random();
         User user = User.builder()
                 .userName(UUID.randomUUID().toString())
                 .id(id)
                 .gender(random.nextBoolean()).build();
+        log.info("服务结点从该服务请求数据...");
         return user;
     }
 
     @Override
-    public Integer insertUserId(User user) {
-        System.out.println("服务结点插入数据: " + user);
+    public Integer insertUser(User user) {
+        log.info("服务结点从该服务插入数据: " + user);
         return 1;
     }
 }

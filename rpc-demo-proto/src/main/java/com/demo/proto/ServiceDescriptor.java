@@ -63,28 +63,28 @@ public class ServiceDescriptor implements Serializable {
         return sdp;
     }
 
-//    // 由于注册服务用map使用该自建类型，需要重写该类equals和hashcode方法
-//    @Override
-//    public int hashCode() {
-//        return toString().hashCode();
-//    }
-//
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//
-//        ServiceDescriptor that = (ServiceDescriptor) o;
-//
-//        return this.toString().equals(that.toString());
-//    }
-//
-//    @Override
-//    public String toString() {
-//        return "clazz=" + clazz
-//                + ",method=" + method
-//                + ",returnType=" + returnType
-//                + ",parameterTypes=" + Arrays.toString(parameterTypes);
-//    }
+    // 由于注册服务用map使用该自建类型，需要重写该类equals和hashcode方法
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ServiceDescriptor that = (ServiceDescriptor) o;
+
+        return this.toString().equals(that.toString());
+    }
+
+    @Override
+    public String toString() {
+        return "clazz=" + clazz
+                + ",method=" + method
+                + ",returnType=" + returnType
+                + ",parameterTypes=" + Arrays.toString(parameterTypes);
+    }
 }
 

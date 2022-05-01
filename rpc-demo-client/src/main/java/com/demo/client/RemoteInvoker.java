@@ -1,18 +1,18 @@
 package com.demo.client;
 
-import com.demo.common.entity.User;
+import com.alibaba.fastjson.JSON;
+import com.demo.codec.Decoder;
+import com.demo.codec.Encoder;
 import com.demo.proto.Request;
 import com.demo.proto.Response;
 import com.demo.proto.ServiceDescriptor;
+import com.demo.transport.TransportClient;
 import lombok.extern.slf4j.Slf4j;
+import sun.misc.IOUtils;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.net.Socket;
-import java.util.Random;
 
 /**
  * @author: shf
@@ -23,9 +23,15 @@ import java.util.Random;
 @Slf4j
 public class RemoteInvoker implements InvocationHandler{
     private Class clazz;
+    private Encoder encoder;
+    private Decoder decoder;
+    private TransportSelector selector;
 
-    public RemoteInvoker(Class clazz) {
+    public RemoteInvoker(Class clazz, Encoder encoder, Decoder decoder, TransportSelector selector) {
         this.clazz = clazz;
+        this.encoder = encoder;
+        this.decoder = decoder;
+        this.selector = selector;
     }
 
     @Override
@@ -39,33 +45,34 @@ public class RemoteInvoker implements InvocationHandler{
             throw new IllegalStateException("Fail to invoke remote: " + request);
         }
 
-        return response.getData();
+        // 返回值需要进一步类型转换
+        // return response.getData();
+        return JSON.parseObject(response.getData().toString(), Class.forName(request.getService().getReturnType()));
     }
 
     public Response invokeRemote(Request request) {
-        Socket socket = null;
+        TransportClient client = null;
+        Response resp = null;
 
         try {
-            socket = new Socket("127.0.0.1", 8000);
+            client = selector.select();
 
-            // 写入数据,序列化交给ObjectOutputStream,传送request
-            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-            outputStream.writeObject(request);
-            outputStream.flush();
+            byte[] inBytes = encoder.encode(request);
+            InputStream inputStream = client.write(new ByteArrayInputStream(inBytes));
 
-            // 读回数据
-            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-            return (Response) inputStream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            return Response.fail();
+            byte[] outBytes = IOUtils.readNBytes(inputStream, inputStream.available());
+            resp = decoder.decode(outBytes, Response.class);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            return Response.fail("RpcClient got error: "
+                    + e.getClass()
+                    + ": " +e.getMessage());
         } finally {
-            try {
-                if (socket != null) {
-                    socket.close();
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage(), e);
+            if (client != null) {
+                selector.release(client);
             }
         }
+
+        return resp;
     }
 }

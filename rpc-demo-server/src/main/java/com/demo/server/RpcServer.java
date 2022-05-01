@@ -1,19 +1,21 @@
 package com.demo.server;
 
-import com.demo.common.entity.User;
-import com.demo.common.service.UserService;
-import com.demo.common.service.UserServiceImpl;
+
+import com.alibaba.fastjson.JSON;
+import com.demo.codec.Decoder;
+import com.demo.codec.Encoder;
 import com.demo.common.utils.ReflectionUtils;
 import com.demo.proto.Request;
 import com.demo.proto.Response;
-import com.demo.proto.ServiceDescriptor;
+import com.demo.transport.RequestHandler;
+import com.demo.transport.TransportServer;
 import lombok.extern.slf4j.Slf4j;
+import sun.misc.IOUtils;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 
 /**
  * @author: shf
@@ -23,42 +25,71 @@ import java.net.Socket;
 
 @Slf4j
 public class RpcServer {
-    public static void main(String[] args) {
-        ServiceManager sm = new ServiceManager();
-        sm.register(UserService.class, new UserServiceImpl());
+    private RpcServerConfig config;
+    private Encoder encoder;
+    private Decoder decoder;
+    private TransportServer net;
+    private ServiceManager manager;
 
-        ServerSocket serverSocket = null;
-
-        try {
-            serverSocket = new ServerSocket(8000);
-            log.info("Server listening...");
-
-            while (true) {
-                Socket socket = serverSocket.accept();
-
-                new Thread(() -> {
-                    Response resp = new Response();
-                    try {
-                        // 先读取request
-                        ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                        Request request = (Request) inputStream.readObject();
-
-                        // 查找服务，代理，提取对象，包装成Response写回
-                        ServiceInstance instance = sm.lookup(request);
-                        Object o = ReflectionUtils.invoke(instance.getTarget(), instance.getMethod(), request.getParameters());
-                        resp = Response.success(o);
-
-                        ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-                        outputStream.writeObject(resp);
-                        outputStream.flush();
-                    } catch (IOException | ClassNotFoundException e) {
-                        log.error(e.getMessage() + e);
-                    }
-                }).start();
-            }
-
-        } catch (IOException e) {
-            throw new IllegalStateException(e.getMessage());
-        }
+    public RpcServer(){
+        this(new RpcServerConfig());
     }
+
+    public RpcServer(RpcServerConfig config) {
+        this.config = config;
+
+        this.encoder = ReflectionUtils.newInstance(config.getEncoderClass());
+        this.decoder = ReflectionUtils.newInstance(config.getDecoderClass());
+        this.net = ReflectionUtils.newInstance(config.getTransportClass());
+        net.init(config.getPort(), handler);
+
+        this.manager = new ServiceManager();
+    }
+
+    public <T> void register(Class<T> interfaceClass, T bean) {
+        manager.register(interfaceClass, bean);
+    }
+
+    public void start() {
+        this.net.start();
+    }
+
+    public void stop() {
+        this.net.stop();
+    }
+
+    private RequestHandler handler = new RequestHandler() {
+
+        @Override
+        public void onRequest(InputStream receive, OutputStream toResp) {
+            Response resp = null;
+
+            try {
+                byte[] inBytes = IOUtils.readNBytes(receive, receive.available());
+                Request request = decoder.decode(inBytes, Request.class);
+
+                log.info("Server receive request, in process....");
+                ServiceInstance instance = manager.lookup(request);
+                Object[] objs = request.getParameters();
+                for (int i = 0; i < objs.length; i++) {
+                    objs[i] = JSON.parseObject(objs[i].toString(), Class.forName(request.getService().getParameterTypes()[i]));
+                }
+                Object o = ReflectionUtils.invoke(instance.getTarget(), instance.getMethod(), request.getParameters());
+                resp = Response.success(o);
+            } catch (IOException | ClassNotFoundException e) {
+                log.error(e.getMessage(), e);
+                resp = Response.fail("RpcServer got error: "
+                        + e.getClass().getName()
+                        + ": " + e.getMessage());
+            } finally {
+                byte[] bytes = encoder.encode(resp);
+                try {
+                    toResp.write(bytes);
+                    log.info("Write response back...");
+                } catch (IOException e) {
+                    log.warn(e.getMessage(), e);
+                }
+            }
+        }
+    };
 }
