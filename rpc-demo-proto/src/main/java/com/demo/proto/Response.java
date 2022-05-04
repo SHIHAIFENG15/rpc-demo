@@ -25,17 +25,20 @@ public class Response implements Serializable {
 
     private Object data;
 
-    public static Response success(Object data) {
+    private String clazz;
+
+    public static Response success(Object data, String clazz) {
         return Response.builder()
                 .code(200)
                 .data(data)
+                .clazz(clazz)
                 .build();
     }
 
-    public static Response fail() {
+    public static Response fail(String message) {
         return Response.builder()
                 .code(500)
-                .message("服务器错误")
+                .message(message)
                 .build();
     }
 }

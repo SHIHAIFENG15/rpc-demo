@@ -3,9 +3,12 @@ package com.demo.server;
 import com.demo.common.utils.ReflectionUtils;
 import com.demo.proto.Request;
 import com.demo.proto.ServiceDescriptor;
+import com.demo.server.register.ServiceRegister;
+import com.demo.server.register.ZkServiceRegister;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,8 +24,14 @@ public class ServiceManager {
     利用Map注册
      */
     private Map<ServiceDescriptor, ServiceInstance> services;
+    private ServiceRegister serviceRegister;
+    private String host;
+    private int port;
 
-    public ServiceManager() {
+    public ServiceManager(String host, int port) {
+        this.host = host;
+        this.port = port;
+        this.serviceRegister = new ZkServiceRegister();
         this.services = new ConcurrentHashMap<>();
     }
 
@@ -34,6 +43,7 @@ public class ServiceManager {
             ServiceInstance instance = new ServiceInstance(bean, method);
             ServiceDescriptor sdp = ServiceDescriptor.from(interfaceClass, method);
 
+            serviceRegister.register(sdp, new InetSocketAddress(host, port));
             services.put(sdp, instance);
             log.info("Register service : "
                     + sdp.getClazz()

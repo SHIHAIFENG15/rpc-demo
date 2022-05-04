@@ -13,6 +13,8 @@
         <module>rpc-demo-common</module>
         <module>rpc-demo-server</module>
         <module>rpc-demo-proto</module>
+        <module>rpc-demo-example</module>
+        <module>rpc-demo-codec</module>
     </modules>
 
     <properties>

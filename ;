@@ -1,0 +1,35 @@
+[33mcommit 49336ad2a6d5605e7b0928d873169ad940c30a1b[m[33m ([m[1;36mHEAD[m[33m)[m
+Author: SHF <980627yxz@gmail.com>
+Date:   Tue May 3 14:16:28 2022 +0800
+
+    version3.1 废弃版本
+
+[33mcommit 7b9a050f86ce3708effe96189944e2a1e6d2b12b[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m
+Author: SHF <980627yxz@gmail.com>
+Date:   Sun May 1 18:47:13 2022 +0800
+
+    version 3.0 比较完整模型 jetty+HttpURLConnectio网络版本
+
+[33mcommit 7ded017cc4b8713e589a41b112a1a54182518a86[m
+Author: SHF <980627yxz@gmail.com>
+Date:   Sat Apr 30 11:47:39 2022 +0800
+
+    gitignore
+
+[33mcommit 3f932d4b9e2d3d2a4bde23350af0cb596c6df4f4[m
+Author: SHF <980627yxz@gmail.com>
+Date:   Sat Apr 30 00:56:59 2022 +0800
+
+    version2.0 协议定义和服务抽象
+
+[33mcommit 944db80653e57985e26a3cd9678bb6f9e4d53de4[m
+Author: SHF <980627yxz@gmail.com>
+Date:   Fri Apr 29 16:10:01 2022 +0800
+
+    version1.1 简单修改
+
+[33mcommit 59b5d7e3d139d6ffb1c7b0d2020653ebf6ca7b3d[m
+Author: SHF <980627yxz@gmail.com>
+Date:   Fri Apr 29 16:00:16 2022 +0800
+
+    version1.0

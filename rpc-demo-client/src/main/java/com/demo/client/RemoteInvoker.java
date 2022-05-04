@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.Socket;
+import java.rmi.Remote;
 import java.util.Random;
 
 /**
@@ -23,9 +24,11 @@ import java.util.Random;
 @Slf4j
 public class RemoteInvoker implements InvocationHandler{
     private Class clazz;
+    private RemoteHandler handler;
 
-    public RemoteInvoker(Class clazz) {
+    public RemoteInvoker(Class clazz, RemoteHandler handler) {
         this.clazz = clazz;
+        this.handler = handler;
     }
 
     @Override
@@ -42,30 +45,13 @@ public class RemoteInvoker implements InvocationHandler{
         return response.getData();
     }
 
+    // 网络逻辑放到Client实现handler,遵循开闭原则
     public Response invokeRemote(Request request) {
-        Socket socket = null;
 
-        try {
-            socket = new Socket("127.0.0.1", 8000);
-
-            // 写入数据,序列化交给ObjectOutputStream,传送request
-            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-            outputStream.writeObject(request);
-            outputStream.flush();
-
-            // 读回数据
-            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-            return (Response) inputStream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            return Response.fail();
-        } finally {
-            try {
-                if (socket != null) {
-                    socket.close();
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage(), e);
-            }
+        if (handler != null) {
+            return handler.getResp(request);
+        } else {
+            throw new IllegalStateException("Remote handler is empty : " + request);
         }
     }
 }
