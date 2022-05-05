@@ -1,8 +1,8 @@
 # rpc-demo(rpc项目历史版本记录)
 
-手写Rpc框架
+一个手写Rpc框架项目
 
-## version1.0
+## Version1.0
 
 - 最简单的Demo, 基于sockect+ ObjectOutputStream 实现网络传输和序列化， 对UserService对象紧耦合实现远程'getUserByUserId'服务调用。
 - 真正的可用服务应当接口透明传输，利用动态代理包装成统一的服务供使用，包括协议应当也定制成统一格式。
@@ -13,7 +13,7 @@
 
 
 
-## version2.0
+## Version2.0
 
 - 对Response，Request抽象， 同时设置ServiceManager, 以及抽象ServiceDesprition和serviceInstance（分别为描述信息和具体实例），使Rpc service在server端注册，并根据客户端发来的Request找到对应服务，最终生成JDK代理的对象供客户端解析使用。
 - 该版本提升之处在于可以对多个服务代理。
@@ -23,10 +23,11 @@
 
 - develop的版本3.0，main的3.0已废弃
 - 项目重构，增强可扩展性：基本都有抽象接口
-- 网络： Socket / **Netty**
+- 网络： Socket(BIO) / **Netty**(NIO)
 - 序列化： 原生 / **JSON**
 - 增加注册中心：Zk
 - 负载均衡策略：随机/轮询/**一致性哈希**
+- 消息格式： 数据类型|序列化方式|数据长度|数据正文
 - 不足： 
   - 支持基本类型仍有bug
   - 没有与Spring结合
